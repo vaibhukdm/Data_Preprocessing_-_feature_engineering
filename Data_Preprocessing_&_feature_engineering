@@ -1,0 +1,154 @@
+#Celebal Summer Internship Week 6 Assignemt by Vaibhav Kadam
+
+# Import necessary libraries
+import pandas as pd
+import numpy as np
+from sklearn.preprocessing import StandardScaler, OneHotEncoder
+from sklearn.impute import SimpleImputer
+from sklearn.compose import ColumnTransformer
+from sklearn.pipeline import Pipeline
+from sklearn.model_selection import train_test_split
+
+#Importing google library to load the Dataset in Google Colab
+from google.colab import drive
+drive.mount('/content/drive')
+
+#Loading the dataset in the Colob by Google Drive
+titanic_data = pd.read_csv('/content/titanic.csv')
+application_train = pd.read_csv('/content/application_train.csv')
+
+# Combine both datasets
+combined_data = pd.concat([titanic_data, application_train], ignore_index=True)
+
+# Function to perform data preprocessing and feature engineering
+def preprocess_data(data):
+    # Drop unnecessary columns
+    data.drop(['PassengerId', 'Name', 'Ticket', 'Cabin'], axis=1, inplace=True)
+
+    # Handle missing values
+    # For numerical columns, use median imputation
+    numerical_features = ['Age', 'Fare']
+    numerical_transformer = Pipeline(steps=[
+        ('imputer', SimpleImputer(strategy='median')),
+        ('scaler', StandardScaler())
+    ])
+
+# Function to perform data preprocessing and feature engineering for Titanic dataset
+def preprocess_titanic_data(data):
+    # Print column names and inspect data
+    print("Columns in the Titanic dataset:")
+    print(data.columns)
+
+    print("\nSample of the Titanic data:")
+    print(data.head())
+
+    # Drop unnecessary columns if they exist
+    columns_to_drop = []  # Adjust as needed based on your requirements
+    data = data.drop(columns_to_drop, axis=1, errors='ignore')
+
+    # Verify column names after dropping unnecessary columns
+    print("\nColumns after dropping unnecessary columns:")
+    print(data.columns)
+
+    # Adjust categorical features based on actual column names
+    categorical_features = ['Sex', 'Embarked']  # Adjust based on your dataset
+
+    if len(categorical_features) == 0:
+        raise ValueError("No appropriate categorical features found in the Titanic dataframe.")
+
+    # Handle missing values
+    # For numerical columns, use median imputation
+    numerical_features = data.select_dtypes(include=[np.number]).columns.tolist()
+    numerical_transformer = Pipeline(steps=[
+        ('imputer', SimpleImputer(strategy='median')),
+        ('scaler', StandardScaler())
+    ])
+
+    # For categorical columns, use most frequent imputation and one-hot encoding
+    categorical_transformer = Pipeline(steps=[
+        ('imputer', SimpleImputer(strategy='most_frequent')),
+        ('onehot', OneHotEncoder(handle_unknown='ignore'))
+    ])
+
+    # Combine transformers
+    preprocessor = ColumnTransformer(
+        transformers=[
+            ('num', numerical_transformer, numerical_features),
+            ('cat', categorical_transformer, categorical_features)
+        ])
+
+    # Apply preprocessing
+    processed_data = pd.DataFrame(preprocessor.fit_transform(data))
+    processed_data.columns = numerical_features + \
+                             list(preprocessor.named_transformers_['cat']['onehot']
+                                  .get_feature_names_out(categorical_features))
+
+    return processed_data
+
+# Preprocess Titanic dataset
+processed_titanic_data = preprocess_titanic_data(titanic_data)
+
+
+# Print the first few rows of processed_titanic_data
+print("Processed Titanic Data:")
+print(processed_titanic_data.head())
+
+
+# Function to perform data preprocessing and feature engineering for application_train dataset
+def preprocess_application_train(data):
+    # Print column names and inspect data
+    print("Columns in the application_train dataset:")
+    print(data.columns)
+
+    print("\nSample of the application_train data:")
+    print(data.head())
+
+    # Drop unnecessary columns if they exist
+    columns_to_drop = ['SK_ID_CURR']  # Adjust as needed based on your requirements
+    data = data.drop(columns_to_drop, axis=1, errors='ignore')
+
+    # Verify column names after dropping unnecessary columns
+    print("\nColumns after dropping unnecessary columns:")
+    print(data.columns)
+
+    # Adjust categorical features based on actual column names
+    categorical_features = ['CODE_GENDER', 'NAME_CONTRACT_TYPE', 'FLAG_OWN_CAR', 'FLAG_OWN_REALTY']  # Adjust based on your dataset
+
+    if len(categorical_features) == 0:
+        raise ValueError("No appropriate categorical features found in the application_train dataframe.")
+
+    # Handle missing values
+    # For numerical columns, use median imputation
+    numerical_features = data.select_dtypes(include=[np.number]).columns.tolist()
+    numerical_transformer = Pipeline(steps=[
+        ('imputer', SimpleImputer(strategy='median')),
+        ('scaler', StandardScaler())
+    ])
+
+    # For categorical columns, use most frequent imputation and one-hot encoding
+    categorical_transformer = Pipeline(steps=[
+        ('imputer', SimpleImputer(strategy='most_frequent')),
+        ('onehot', OneHotEncoder(handle_unknown='ignore'))
+    ])
+
+    # Combine transformers
+    preprocessor = ColumnTransformer(
+        transformers=[
+            ('num', numerical_transformer, numerical_features),
+            ('cat', categorical_transformer, categorical_features)
+        ])
+
+    # Apply preprocessing
+    processed_data = pd.DataFrame(preprocessor.fit_transform(data))
+    processed_data.columns = numerical_features + \
+                             list(preprocessor.named_transformers_['cat']['onehot']
+                                  .get_feature_names_out(categorical_features))
+
+    return processed_data
+
+# Preprocess application_train dataset
+processed_application_train = preprocess_application_train(application_train)
+
+# Print the first few rows of processed_application_train
+print("Processed application_train Data:")
+print(processed_application_train.head())
